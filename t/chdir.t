@@ -42,3 +42,10 @@ chdir($cwd) or die $!;
 
 ::is( getcwd, $cwd,                 '  and resets automatically!' );
 
+
+{
+    local $ENV{HOME} = 't';
+    chdir;
+    ::is( getcwd, catdir($cwd, 't'), 'magic chdir() with no args' );
+    ::is( $::CWD, catdir($cwd, 't'), '  $CWD follows' );
+}

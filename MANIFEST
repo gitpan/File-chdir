@@ -3,3 +3,4 @@ MANIFEST
 Makefile.PL
 lib/File/chdir.pm
 t/chdir.t
+t/var.t

@@ -1,3 +1,7 @@
+0.02  Mon Sep  3 19:51:02 EDT 2001
+    * Added $CWD
+    - chdir() with no args works
+
 0.01  Fri Aug 31 21:15:25 EDT 2001
     * HA!  It works!
 

@@ -3,22 +3,23 @@ package File::chdir;
 use 5.006001;
 
 use strict;
-use vars qw($VERSION @ISA @EXPORT);
-$VERSION = 0.01;
+use vars qw($VERSION @ISA @EXPORT $CWD);
+$VERSION = 0.02;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(chdir);
+@EXPORT = qw(chdir $CWD);
+
+tie $CWD, 'File::chdir::CWD' or die "Can't tie \$CWD:  $!";
 
 sub import {
     my($class, @args) = @_;
 
     if( grep /^:EVERYWHERE$/, @args ) {
-       *CORE::GLOBAL::chdir = \&chdir;
+        no warnings 'redefine';
+        *CORE::GLOBAL::chdir = \&chdir;
     }
-    else {
-        $class->export_to_level(1, @_);
-    }
+    $class->export_to_level(1, grep !/^:/, @_);
 }
 
 use Cwd;
@@ -27,7 +28,7 @@ use Want;
 
 =head1 NAME
 
-File::chdir - a more sensible chdir() function
+File::chdir - a more sensible chdir()
 
 =head1 SYNOPSIS
 
@@ -51,6 +52,26 @@ the B<whole> program.
 
 This sucks.
 
+File::chdir gives you two alternatives.  They can be safely
+intermixed.
+
+=head2 $CWD
+
+Alternatively, you can use the $CWD variable instead of chdir().
+
+    use File::chdir;
+    $CWD = $dir;  # just like chdir($dir)!
+
+It can be localized, and it does the right thing.
+
+    $CWD = "/foo";      # it's /foo out here.
+    {
+        local $CWD = "/bar";  # /bar in here
+    }
+    # still /foo out here!
+
+=head2 chdir()
+
 File::chdir gives you a dynamically-scoped chdir().  Your chdir()
 calls will have effect as long as you're in the current block.  Once
 you exit, you'll rever back to the old directory.
@@ -64,6 +85,7 @@ This acts just like perl's chdir().
    { my $old_dir = chdir($dir); }
 
 This one is scoped to the current block.
+
 
 =head2 EVERYWHERE!
 
@@ -80,15 +102,44 @@ sub chdir (;$) {
     my($new_dir) = @_;
 
     # In void and boolean context we fallback to CORE::chdir()'s behavior.
-    return CORE::chdir($new_dir) if want('VOID') || want('BOOL');
+    return _tracking_chdir($new_dir) if want('VOID') || want('BOOL');
 
     # We use getcwd() because it is taint-clean.
-    my $curr_dir = getcwd();
+    my $curr_dir = Cwd::abs_path();
 
-    CORE::chdir($new_dir) || warn "chdir $new_dir failed:  $!";
+    _tracking_chdir($new_dir) || return 0;
 
     my $end = File::chdir::END->new($curr_dir);
     return $end;
+}
+
+
+use File::Spec::Functions qw(rel2abs);
+
+my $Real_CWD;
+sub _tracking_chdir (;$) {
+    my($new_dir) = @_;
+
+    $Real_CWD = rel2abs($new_dir) if defined $new_dir;
+
+    return defined $new_dir ? CORE::chdir($new_dir) : CORE::chdir();
+}
+
+*CORE::GLOBAL::chdir = \&_tracking_chdir;
+
+{
+    package File::chdir::CWD;
+
+    sub TIESCALAR { 
+        $Real_CWD = Cwd::abs_path;
+        bless [], $_[0];
+    }
+    sub FETCH { return $Real_CWD }
+    sub STORE {
+        return unless defined $_[1];
+        File::chdir::_tracking_chdir( $_[1] );
+        return $Real_CWD;
+    }
 }
 
 
