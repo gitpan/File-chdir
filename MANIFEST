@@ -8,3 +8,4 @@ t/lib/Test/Builder.pm
 t/lib/Test/More.pm
 t/lib/Test/Simple.pm
 t/var.t
+META.yml                                Module meta-data (added by MakeMaker)

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -Tw
 
 use strict;
 use lib qw(t/lib);
@@ -7,13 +7,12 @@ use Test::More tests => 31;
 BEGIN { use_ok('File::chdir') }
 
 use Cwd;
-use File::Spec::Functions qw(:DEFAULT splitdir rootdir);
 
 sub _catdir {
-    catdir(rootdir, @_);
+    File::Spec->catdir(File::Spec->rootdir, @_);
 }
 
-my @cwd = grep length, splitdir(Cwd::abs_path);
+my @cwd = grep length, File::Spec->splitdir(Cwd::abs_path);
 
 ok( tied @CWD,      '@CWD is fit to be tied' );
 

@@ -1,3 +1,10 @@
+0.06  Thu Aug 14 17:02:32 PDT 2003
+    * Now working under taint mode (thanks Mark Guckeyson)
+    - Small nit in the SYNOPSIS
+    * Removed dependency on File::Spec 0.8 and File::Spec::Functions
+    - Added a LICENSE
+    - Added NOTES about %CWD.
+
 0.05  Mon Nov 26 15:44:20 EST 2001
     * Added @CWD
     - $CWD's value now guaranteed to be correct even if some other code

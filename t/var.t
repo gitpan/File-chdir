@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -Tw
 
 use strict;
 use lib qw(t/lib);
@@ -7,7 +7,9 @@ use Test::More tests => 11;
 BEGIN { use_ok('File::chdir') }
 
 use Cwd;
-use File::Spec::Functions;
+
+# Don't want to depend on File::Spec::Functions
+sub catdir { File::Spec->catdir(@_) }
 
 my $cwd = getcwd;
 

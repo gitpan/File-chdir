@@ -4,7 +4,7 @@ use 5.004;
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT $CWD @CWD);
-$VERSION = 0.05;
+$VERSION = 0.06;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -24,7 +24,6 @@ File::chdir - a more sensible way to change directories
 =head1 SYNOPSIS
 
   use File::chdir;
-  use Cwd;
 
   $CWD = "/foo/bar";     # now in /foo/bar
   {
@@ -90,10 +89,17 @@ CAVEATS> for a work around.
 
 =cut
 
+sub _abs_path () {
+    # Otherwise we'll never work under taint mode.
+    my($cwd) = Cwd::abs_path =~ /(.*)/;
+    return $cwd;
+}
+
 my $Real_CWD;
 sub _chdir ($) {
     my($new_dir) = @_;
-    my $Real_CWD = File::Spec->rel2abs($new_dir);
+
+    my $Real_CWD = File::Spec->catdir(_abs_path(), $new_dir);
 
     return CORE::chdir($new_dir);
 }
@@ -107,7 +113,9 @@ sub _chdir ($) {
 
     # To be safe, in case someone chdir'd out from under us, we always
     # check the Cwd explicitly.
-    sub FETCH { return Cwd::abs_path }
+    sub FETCH {
+        return File::chdir::_abs_path;
+    }
 
     sub STORE {
         return unless defined $_[1];
@@ -131,7 +139,7 @@ sub _chdir ($) {
     }
 
     sub _cwd_list {
-        return _splitdir(Cwd::abs_path);
+        return _splitdir(File::chdir::_abs_path);
     }
 
     sub _catdir {
@@ -230,6 +238,7 @@ sub _chdir ($) {
     }
 }
 
+
 =head1 EXAMPLES
 
 (We omit the C<use File::chdir> from these examples for terseness)
@@ -299,9 +308,29 @@ effectively localize @CWD.
         ...
     }
 
-=head1 SEE ALSO
+
+=head1 NOTES
+
+What should %CWD do?  Something with volumes?
+
+    # chdir to C:\Program Files\Sierra\Half Life ?
+    $CWD{C} = '\\Program Files\\Sierra\\Half Life';
+
+
+=head1 AUTHOR
 
 Michael G Schwern E<lt>schwern@pobox.comE<gt>
+
+
+=head1 LICENSE
+
+Copyright 2001-2003 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
+
+This program is free software; you can redistribute it and/or 
+modify it under the same terms as Perl itself.
+
+See F<http://www.perl.com/perl/misc/Artistic.html>
+
 
 =head1 HISTORY
 
@@ -312,6 +341,11 @@ Abigail and/or Bryan Warnock suggested the $CWD thing, I forget which.
 They were right.
 
 The chdir() override was eliminated in 0.04.
+
+
+=head1 SEE ALSO
+
+File::Spec, Cwd, L<perlfunc/chdir>
 
 =cut
 

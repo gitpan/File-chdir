@@ -38,8 +38,7 @@ WriteMakefile(
     NAME            => $PACKAGE,
     VERSION_FROM    => "lib/$PACKAGE_FILE.pm", # finds $VERSION
     PREREQ_PM       => { Cwd        => 0,
-                         File::Spec => 0.8,
-                         File::Spec::Functions => 0,
+                         File::Spec => 0,
                        },
     'dist'          => { COMPRESS   => 'gzip -9',
                          SUFFIX     => '.gz',
