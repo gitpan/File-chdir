@@ -5,13 +5,13 @@
 # - Fill in your dependencies in PREREQ_PM
 # Alternatively, you can say the hell with this and use h2xs.
 
-use 5.006001;
+use 5.004;
 
 use ExtUtils::MakeMaker;
 
 $PACKAGE = 'File::chdir';
 ($PACKAGE_FILE = $PACKAGE) =~ s|::|/|g;
-$LAST_API_CHANGE = 0.03;
+$LAST_API_CHANGE = 0.04;
 
 eval "require $PACKAGE";
 
@@ -20,10 +20,10 @@ if(!$@ && ${$PACKAGE.'::VERSION'} < $LAST_API_CHANGE) {
 
 WARNING  WARNING  WARNING  WARNING  WARNING  WARNING  WARNING  WARNING
 
------*****>>>>>     THE INTERFACE IS CHANGING     <<<<<*****----------
+-----*****>>>>>     THE INTERFACE HAS CHANGED     <<<<<*****----------
 
-The next version will eliminate the chdir() override.  It's too
-complicated and not worth the trouble.  Only $CWD will remain.
+The chdir() override has been ELIMINATED.  It's too complicated and
+not worth the trouble.
 
 WARNING  WARNING  WARNING  WARNING  WARNING  WARNING  WARNING  WARNING
 
@@ -37,13 +37,38 @@ CHANGE_WARN
 WriteMakefile(
     NAME            => $PACKAGE,
     VERSION_FROM    => "lib/$PACKAGE_FILE.pm", # finds $VERSION
-    PREREQ_PM       => { Want       => 0.05,
-                         Cwd        => 0,
+    PREREQ_PM       => { Cwd        => 0,
+                         File::Spec => 0.8,
                          File::Spec::Functions => 0,
-                         Test::More => 0.17,
                        },
     'dist'          => { COMPRESS   => 'gzip -9',
                          SUFFIX     => '.gz',
                          DIST_DEFAULT   => 'all tardist',
                        },
 );
+
+
+{
+    package MY;
+
+    sub test_via_harness {
+        my($self, $orig_perl, $tests) = @_;
+
+        my @perls = ($orig_perl);
+        push @perls, qw(bleadperl 
+                        perl5.6.1
+                        perl5.6.0
+                        perl5.005_03 
+                        perl5.004_05 
+                        perl5.004_04
+                        perl5.004)
+          if $ENV{PERL_TEST_ALL};
+
+        my $out;
+        foreach my $perl (@perls) {
+            $out .= $self->SUPER::test_via_harness($perl, $tests);
+        }
+
+        return $out;
+    }
+}

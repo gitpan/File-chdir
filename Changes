@@ -1,3 +1,12 @@
+0.05  Mon Nov 26 15:44:20 EST 2001
+    * Added @CWD
+    - $CWD's value now guaranteed to be correct even if some other code
+      calls chdir().
+
+0.04  Mon Nov 26 13:36:24 EST 2001  *UNRELEASED*
+    * The magic chdir() is *gone*
+    * Now works back to 5.004
+
 0.03  Mon Sep  3 20:10:15 EDT 2001
     * chdir() is being deprecated and will be removed next version!
     - Gave credit to Abigail and Bryan

@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 
 use strict;
-use Test::More 'no_plan';
+use lib qw(t/lib);
+use Test::More tests => 11;
 
 BEGIN { use_ok('File::chdir') }
 
