@@ -1,3 +1,7 @@
+0.03  Mon Sep  3 20:10:15 EDT 2001
+    * chdir() is being deprecated and will be removed next version!
+    - Gave credit to Abigail and Bryan
+
 0.02  Mon Sep  3 19:51:02 EDT 2001
     * Added $CWD
     - chdir() with no args works

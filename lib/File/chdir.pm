@@ -4,7 +4,7 @@ use 5.006001;
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT $CWD);
-$VERSION = 0.02;
+$VERSION = 0.03;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -196,7 +196,10 @@ This module requires perl 5.6.1
 
 =head1 HISTORY
 
-See the "local chdir" thread on p5p.
+I wanted C<local chdir> to work.  p5p didn't.  Did I let that stop me?
+No!  Did we give up after the Germans bombed Pearl Harbor?  Hell, no!
+
+Abigail and/or Bryan Warnock suggested the $CWD thing, I forget which.
 
 =cut
 

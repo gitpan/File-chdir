@@ -11,18 +11,27 @@ use ExtUtils::MakeMaker;
 
 $PACKAGE = 'File::chdir';
 ($PACKAGE_FILE = $PACKAGE) =~ s|::|/|g;
-$LAST_API_CHANGE = 0;
+$LAST_API_CHANGE = 0.03;
 
 eval "require $PACKAGE";
 
-unless ($@) { # Make sure we did find the module.
-    print <<"CHANGE_WARN" if ${$PACKAGE.'::VERSION'} < $LAST_API_CHANGE;
+if(!$@ && ${$PACKAGE.'::VERSION'} < $LAST_API_CHANGE) {
+    print <<"CHANGE_WARN";
 
-NOTE: There have been API changes between this version and any older
-than version $LAST_API_CHANGE!  Please read the Changes file if you
-are upgrading from a version older than $LAST_API_CHANGE.
+WARNING  WARNING  WARNING  WARNING  WARNING  WARNING  WARNING  WARNING
+
+-----*****>>>>>     THE INTERFACE IS CHANGING     <<<<<*****----------
+
+The next version will eliminate the chdir() override.  It's too
+complicated and not worth the trouble.  Only $CWD will remain.
+
+WARNING  WARNING  WARNING  WARNING  WARNING  WARNING  WARNING  WARNING
+
+We'll pause for 20 seconds...
 
 CHANGE_WARN
+
+    sleep 20;
 }
 
 WriteMakefile(
