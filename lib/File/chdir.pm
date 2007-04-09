@@ -4,7 +4,7 @@ use 5.004;
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT $CWD @CWD);
-$VERSION = 0.06;
+$VERSION = "0.06_01";
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -61,7 +61,8 @@ It can be localized, and it does the right thing.
     }
     # still /foo out here!
 
-$CWD always returns the absolute path.
+$CWD always returns the absolute path in the native form for the 
+operating system.
 
 $CWD and normal chdir() work together just fine.
 
@@ -92,7 +93,8 @@ CAVEATS> for a work around.
 sub _abs_path () {
     # Otherwise we'll never work under taint mode.
     my($cwd) = Cwd::abs_path =~ /(.*)/;
-    return $cwd;
+    # Run through File::Spec, since everything else uses it 
+    return File::Spec->canonpath($cwd);
 }
 
 my $Real_CWD;
@@ -134,6 +136,11 @@ sub _chdir ($) {
 
     # splitdir() leaves empty directory names in place on purpose.
     # I don't think this is the right thing for us, but I could be wrong.
+    #
+    # dagolden: splitdir gives a leading empty string if the path is
+    # absolute and starts with a path separator
+    #   unix: /home/foo  -> "", "home", "foo"
+    #   win32: c:\home\foo -. "c:", "home", "foo"
     sub _splitdir {
         return grep length, File::Spec->splitdir($_[0]);
     }
@@ -142,8 +149,20 @@ sub _chdir ($) {
         return _splitdir(File::chdir::_abs_path);
     }
 
+    # dagolden: on unix, catdir() with an empty string first will give a 
+    # path from the root (inverse of splitdir).  On Win32, the first
+    # element in the array should be the volume, but if there are no
+    # arguments at all (i.e. if @CWD was cleared), then we do need an
+    # empty string to get back the root of the current volume
     sub _catdir {
-        return File::Spec->catdir(File::Spec->rootdir, @_);
+        my @dirs;
+        if ( $^O eq 'MSWin32' &&  @_ ) {
+            @dirs = @_;
+        }
+        else {
+            @dirs = ( q{}, @_ );
+        }
+        return File::Spec->catdir( @dirs );
     }
 
     sub FETCH { 
@@ -298,6 +317,8 @@ You can easily change your parent directory:
 
 =head1 BUGS and CAVEATS
 
+=head3 C<local @CWD> does not work.
+
 C<local @CWD> will not localize C<@CWD>.  This is a bug in Perl, you
 can't localize tied arrays.  As a work around localizing $CWD will
 effectively localize @CWD.
@@ -309,7 +330,22 @@ effectively localize @CWD.
     }
 
 
+=head3 Volumes not handled
+
+There is currently no way to change the current volume via File::chdir.
+
+
 =head1 NOTES
+
+C<$CWD> returns the current directory using native path separators, i.e. '\'
+on Win32.  This ensures that C<$CWD> will compare correctly with directories
+created using File::Spec.  For example:
+
+    my $working_dir = File::Spec->catdir( $CWD, "foo" );
+    $CWD = $working_dir;
+    doing_stuff_might_chdir();
+    is( $CWD, $working_dir, "back to original working_dir?" );
+
 
 What should %CWD do?  Something with volumes?
 
@@ -329,13 +365,13 @@ Copyright 2001-2003 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
 This program is free software; you can redistribute it and/or 
 modify it under the same terms as Perl itself.
 
-See F<http://www.perl.com/perl/misc/Artistic.html>
+See F<http://dev.perl.org/licenses/>
 
 
 =head1 HISTORY
 
-I wanted C<local chdir> to work.  p5p didn't.  Did I let that stop me?
-No!  Did we give up after the Germans bombed Pearl Harbor?  Hell, no!
+I wanted C<local chdir> to work.  p5p didn't.  But it wasn't over!
+Was it over when the Germans bombed Pearl Harbor?  Hell, no!
 
 Abigail and/or Bryan Warnock suggested the $CWD thing, I forget which.
 They were right.
@@ -345,7 +381,7 @@ The chdir() override was eliminated in 0.04.
 
 =head1 SEE ALSO
 
-File::Spec, Cwd, L<perlfunc/chdir>
+File::pushd, File::Spec, Cwd, L<perlfunc/chdir>, "Animal House"
 
 =cut
 

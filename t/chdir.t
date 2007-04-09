@@ -8,15 +8,18 @@ BEGIN { use_ok('File::chdir') }
 
 use Cwd;
 
-# Don't want to depend on File::Spec::Functions
-sub catdir { File::Spec->catdir(@_); }
+# assemble directories the same way as File::chdir
+BEGIN { *_catdir = \&File::chdir::ARRAY::_catdir };
 
-my($cwd) = getcwd =~ /(.*)/;  # detaint otherwise nothing's gonna work
+# _catdir has OS-specific path separators so do the same for getcwd
+sub _getcwd { File::Spec->canonpath( getcwd ) }
+
+my($cwd) = _getcwd =~ /(.*)/;  # detaint otherwise nothing's gonna work
 
 # First, let's try normal chdir()
 {
     chdir('t');
-    ::is( getcwd, catdir($cwd,'t'), 'void chdir still works' );
+    ::is( _getcwd, _catdir($cwd,'t'), 'void chdir still works' );
 
     chdir($cwd);    # reset
 
@@ -26,10 +29,10 @@ my($cwd) = getcwd =~ /(.*)/;  # detaint otherwise nothing's gonna work
     else {
         ::fail('chdir() failed completely in boolean context!');
     }
-    ::is( getcwd, catdir($cwd,'t'),  '  even in boolean context' );
+    ::is( _getcwd, _catdir($cwd,'t'),  '  even in boolean context' );
 }
 
-::is( getcwd, catdir($cwd,'t'), '  unneffected by blocks' );
+::is( _getcwd, _catdir($cwd,'t'), '  unneffected by blocks' );
 
 
 # Ok, reset ourself for the real test.
@@ -38,8 +41,8 @@ chdir($cwd) or die $!;
 {
     local $ENV{HOME} = 't';
     chdir;
-    ::is( getcwd, catdir($cwd, 't'), 'chdir() with no args' );
-    ::is( $CWD, catdir($cwd, 't'), '  $CWD follows' );
+    ::is( _getcwd, _catdir($cwd, 't'), 'chdir() with no args' );
+    ::is( $CWD, _catdir($cwd, 't'), '  $CWD follows' );
 }
 
 # Final chdir() back to the original or we confuse the debugger.

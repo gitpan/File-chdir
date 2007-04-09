@@ -37,8 +37,8 @@ CHANGE_WARN
 WriteMakefile(
     NAME            => $PACKAGE,
     VERSION_FROM    => "lib/$PACKAGE_FILE.pm", # finds $VERSION
-    PREREQ_PM       => { Cwd        => 0,
-                         File::Spec => 0,
+    PREREQ_PM       => { Cwd        => 3.16,
+                         File::Spec => 3.16,
                        },
     'dist'          => { COMPRESS   => 'gzip -9',
                          SUFFIX     => '.gz',
