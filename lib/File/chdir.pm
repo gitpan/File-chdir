@@ -4,7 +4,7 @@ use 5.004;
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT $CWD @CWD);
-$VERSION = "0.06_01";
+$VERSION = "0.07";
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -150,17 +150,22 @@ sub _chdir ($) {
     }
 
     # dagolden: on unix, catdir() with an empty string first will give a 
-    # path from the root (inverse of splitdir).  On Win32, the first
+    # path from the root (inverse of splitdir) and we need this when 
+    # assembling a path from an array.  On Win32, the first
     # element in the array should be the volume, but if there are no
     # arguments at all (i.e. if @CWD was cleared), then we do need an
     # empty string to get back the root of the current volume
+
     sub _catdir {
         my @dirs;
-        if ( $^O eq 'MSWin32' &&  @_ ) {
-            @dirs = @_;
+        if ( @_ && File::Spec->file_name_is_absolute($_[0]) ) {
+            @dirs = @_;  # /foo or c:\
+        }
+        elsif ( @_ && $^O eq 'MSWin32' ) {
+            @dirs = @_;  # c: (File::Spec thinks this is relative)
         }
         else {
-            @dirs = ( q{}, @_ );
+            @dirs = ( q{}, @_ ); 
         }
         return File::Spec->catdir( @dirs );
     }
@@ -355,12 +360,22 @@ What should %CWD do?  Something with volumes?
 
 =head1 AUTHOR
 
-Michael G Schwern E<lt>schwern@pobox.comE<gt>
+=over 4
 
+=item *
+
+Michael G Schwern E<lt>schwern@pobox.comE<gt> (original author)
+
+=item *
+
+David A Golden E<lt>dagolden@cpan.orgE<gt> (co-maintainer)
+
+=back
 
 =head1 LICENSE
 
 Copyright 2001-2003 by Michael G Schwern E<lt>schwern@pobox.comE<gt>.
+Portions copyright 2006-2007 by David A Golden E<lt>dagolden@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or 
 modify it under the same terms as Perl itself.
@@ -370,18 +385,21 @@ See F<http://dev.perl.org/licenses/>
 
 =head1 HISTORY
 
-I wanted C<local chdir> to work.  p5p didn't.  But it wasn't over!
+Michael wanted C<local chdir> to work.  p5p didn't.  But it wasn't over!
 Was it over when the Germans bombed Pearl Harbor?  Hell, no!
 
-Abigail and/or Bryan Warnock suggested the $CWD thing, I forget which.
-They were right.
+Abigail and/or Bryan Warnock suggested the $CWD thing (Michael forgets
+which).  They were right.
 
 The chdir() override was eliminated in 0.04.
 
+David became co-maintainer with 0.06_01 to fix some chronic
+Win32 path bugs.
 
 =head1 SEE ALSO
 
-File::pushd, File::Spec, Cwd, L<perlfunc/chdir>, "Animal House"
+L<File::pushd>, L<File::Spec>, L<Cwd>, L<perlfunc/chdir>, 
+"Animal House" L<http://www.imdb.com/title/tt0077975/quotes>
 
 =cut
 
