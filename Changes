@@ -1,3 +1,14 @@
+0.10 Fri Feb  8 08:42:53 EST 2008
+    - File::Spec 3.2501 broke File::chdir on Win32; updated prerequisite to 
+      latest File::Spec (3.27) and rewrote internals of File::chdir 
+    - Split array deletion tests to separate file to skip on Perl < 5.006
+    - Added Build.PL and other files (e.g. INSTALL, LICENSE) to the tarball
+    - Minor documentation changes/additions
+
+0.0901
+    - removed unnecessary prototypes on internal functions (perl critic)
+    - cosmetic changes to distribution package (README, extra tests in xt)
+
 0.09 Mon Jul 30 09:50:28 EDT 2007
     - Updated Makefile.PL to warn about API change in 0.08
     - Added $! diagnostic to error messages

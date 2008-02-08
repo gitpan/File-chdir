@@ -1,23 +1,32 @@
-#!/usr/bin/perl -Tw
+#!/usr/bin/perl -w
 
 use strict;
 use lib qw(t/lib);
-use Test::More tests => 68;
+use Test::More tests => 55;
+use File::Spec::Functions qw/canonpath splitdir catdir splitpath catpath/;
+use Cwd qw/getcwd abs_path/;
 
 BEGIN { use_ok('File::chdir') }
-
-use Cwd;
-use File::Spec;
 
 #--------------------------------------------------------------------------#
 # Fixtures and utility subs
 #--------------------------------------------------------------------------#-
 
-# assemble directories the same way as File::chdir
-BEGIN { *_catdir = \&File::chdir::ARRAY::_catdir };
-
 # _catdir has OS-specific path separators so do the same for getcwd
-sub _getcwd { File::Spec->canonpath( getcwd ) }
+sub _getcwd { canonpath( abs_path ) }
+
+# reassemble
+sub _catpath {
+    my ($vol, @dirs) = @_;
+    return catpath( $vol, catdir(q{}, @dirs), q{} );
+}
+
+# get $vol here and use it later
+my ($vol,$cwd) = splitpath(canonpath(abs_path),1);
+
+# get directory list the way a user would use it -- without empty leading dir
+# as returned by splitdir;
+my @cwd = grep { length } splitdir($cwd);
 
 # Utility sub for checking cases
 sub _check_cwd {
@@ -25,12 +34,10 @@ sub _check_cwd {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
     my $label = pop @_;
     my @expect = @_;
-    is( _getcwd, _catdir(@expect),       "$label works" );
+    is( _getcwd, _catpath($vol,@expect),       "$label works" );
     ok( eq_array(\@CWD, [@expect]),      '... and value of @CWD is correct' );
-    is( $CWD,   _catdir(@expect),        '... and value of $CWD is correct' );
+    is( $CWD, _catpath($vol,@expect),        '... and value of $CWD is correct' );
 }
-
-my @cwd = grep length, File::Spec->splitdir(Cwd::abs_path);
 
 #--------------------------------------------------------------------------#-
 # Tying test
@@ -113,34 +120,6 @@ _check_cwd( @cwd, 'Reset of localized pop' );
 
 
 #--------------------------------------------------------------------------#
-# Delete tests - only from the end of the array (like popping)
-#--------------------------------------------------------------------------#
-
-# Non-local
-eval { delete $CWD[$#CWD] };
-is( $@, '', "Ordinary delete from end of \@CWD lives" );
-_check_cwd( @cwd[0 .. $#cwd-1], 'Ordinary delete from end of @CWD');
-
-# Reset
-@CWD = @cwd;
-
-# Localized 
-{
-    # localizing tied arrays doesn't work, perl bug. :(
-    # this is a work around.
-    local $CWD;
-
-    eval { delete $CWD[$#CWD] };
-    is( $@, '', "Ordinary delete from end of \@CWD lives" );
-    _check_cwd( @cwd[0 .. $#cwd-1], 'Ordinary delete from end of @CWD');
-
-}
-
-# Check that localizing $CWD/@CWD reverts properly
-_check_cwd( @cwd, 'Reset of localized pop' );
-
-
-#--------------------------------------------------------------------------#
 # Splice tests
 #--------------------------------------------------------------------------#
 
@@ -192,25 +171,11 @@ _check_cwd( @cwd, 'Reset of localized splice' );
 # Exceptions
 #--------------------------------------------------------------------------#
 
-# Now check that errors throw an exception on various activities
-my $target = "doesnt_exist";
-my $err;
-
-# DELETE (middle of array)
-{
-    local $CWD;
-    push @CWD, 't', 'lib';
-    eval { delete $CWD[-2] };
-    $err = $@;
-    ok( $err, 'Deleting $CWD[-2] throws an error' );
-    like( $err,  "/Can't delete except at the end of \@CWD/", 
-        '... and the error message is correct');
-}
-
 
 # PUSH to invalid directory
+my $target = "doesnt_exist";
 eval { push @CWD, $target };
-$err = $@;
+my $err = $@;
 ok( $err, 'Failure to chdir throws an error' );
 my $missing_dir = File::Spec->catfile($CWD,$target);
 like( $err,  "/Failed to change directory to '\Q$missing_dir\E'/", 
