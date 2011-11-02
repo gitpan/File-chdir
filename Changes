@@ -1,5 +1,13 @@
 Changes for File-chdir
 
+0.1005    2011-11-02 14:21:27 America/New_York
+
+    - Fixed rt.cpan.org #53064 [Michael Schwern]
+
+    - Removes bundled Test::More
+
+    - Converted distribution builder to Dist::Zilla
+
 0.1004 Wed Jun  9 14:14:54 EDT 2010
 
     - Build.Pl and Makefile.PL will bail out on Perl 5.13.1, which

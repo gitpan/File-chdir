@@ -2,16 +2,16 @@ package File::chdir;
 use 5.004;
 use strict;
 use vars qw($VERSION @ISA @EXPORT $CWD @CWD);
-$VERSION = '0.1004';
-$VERSION = eval $VERSION; ## no critic
+# ABSTRACT: a more sensible way to change directories
+our $VERSION = '0.1005'; # VERSION
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw($CWD @CWD);
+@EXPORT = qw(*CWD);
 
 use Carp;
-use Cwd;
-use File::Spec::Functions qw/canonpath splitpath catpath splitdir catdir/;
+use Cwd 3.16;
+use File::Spec::Functions 3.27 qw/canonpath splitpath catpath splitdir catdir/;
 
 tie $CWD, 'File::chdir::SCALAR' or die "Can't tie \$CWD";
 tie @CWD, 'File::chdir::ARRAY'  or die "Can't tie \@CWD";
@@ -190,248 +190,274 @@ sub _chdir {
 }
 
 1;
-__END__
 
-=begin wikidoc
 
-= NAME
+=pod
+
+=head1 NAME
 
 File::chdir - a more sensible way to change directories
 
-= VERSION
+=head1 VERSION
 
-This documentation describes version %%VERSION%%.
+version 0.1005
 
-= SYNOPSIS
+=head1 SYNOPSIS
 
-  use File::chdir;
+   use File::chdir;
+ 
+   $CWD = "/foo/bar";     # now in /foo/bar
+   {
+       local $CWD = "/moo/baz";  # now in /moo/baz
+       ...
+   }
+ 
+   # still in /foo/bar!
 
-  $CWD = "/foo/bar";     # now in /foo/bar
-  {
-      local $CWD = "/moo/baz";  # now in /moo/baz
-      ...
-  }
+=head1 DESCRIPTION
 
-  # still in /foo/bar!
-
-= DESCRIPTION
-
-Perl's {chdir()} has the unfortunate problem of being very, very, very
-global.  If any part of your program calls {chdir()} or if any library
-you use calls {chdir()}, it changes the current working directory for
-the *whole* program.
+Perl's C<<< chdir() >>> has the unfortunate problem of being very, very, very
+global.  If any part of your program calls C<<< chdir() >>> or if any library
+you use calls C<<< chdir() >>>, it changes the current working directory for
+the B<whole> program.
 
 This sucks.
 
-File::chdir gives you an alternative, {$CWD} and {@CWD}.  These two
-variables combine all the power of {chdir()}, [File::Spec] and [Cwd].
+File::chdir gives you an alternative, C<<< $CWD >>> and C<<< @CWD >>>.  These two
+variables combine all the power of C<<< chdir() >>>, L<File::Spec> and L<Cwd>.
 
-= $CWD
+=head1 $CWD
 
-Use the {$CWD} variable instead of {chdir()} and Cwd.
+Use the C<<< $CWD >>> variable instead of C<<< chdir() >>> and Cwd.
 
-    use File::chdir;
-    $CWD = $dir;  # just like chdir($dir)!
-    print $CWD;   # prints the current working directory
+     use File::chdir;
+     $CWD = $dir;  # just like chdir($dir)!
+     print $CWD;   # prints the current working directory
 
 It can be localized, and it does the right thing.
 
-    $CWD = "/foo";      # it's /foo out here.
-    {
-        local $CWD = "/bar";  # /bar in here
-    }
-    # still /foo out here!
+     $CWD = "/foo";      # it's /foo out here.
+     {
+         local $CWD = "/bar";  # /bar in here
+     }
+     # still /foo out here!
 
-{$CWD} always returns the absolute path in the native form for the 
+C<<< $CWD >>> always returns the absolute path in the native form for the 
 operating system.
 
-{$CWD} and normal {chdir()} work together just fine.
+C<<< $CWD >>> and normal C<<< chdir() >>> work together just fine.
 
-= @CWD
+=head1 @CWD
 
-{@CWD} represents the current working directory as an array, each
+C<<< @CWD >>> represents the current working directory as an array, each
 directory in the path is an element of the array.  This can often make
 the directory easier to manipulate, and you don't have to fumble with
-{File::Spec->splitpath} and {File::Spec->catdir} to make portable code.
+C<<< File::Spec->splitpath >>> and C<<< File::Spec->catdir >>> to make portable code.
 
-  # Similar to chdir("/usr/local/src/perl")
-  @CWD = qw(usr local src perl);
+   # Similar to chdir("/usr/local/src/perl")
+   @CWD = qw(usr local src perl);
 
 pop, push, shift, unshift and splice all work.  pop and push are
 probably the most useful.
 
-  pop @CWD;                 # same as chdir(File::Spec->updir)
-  push @CWD, 'some_dir'     # same as chdir('some_dir')
+   pop @CWD;                 # same as chdir(File::Spec->updir)
+   push @CWD, 'some_dir'     # same as chdir('some_dir')
 
-{@CWD} and {$CWD} both work fine together.
+C<<< @CWD >>> and C<<< $CWD >>> both work fine together.
 
-*NOTE* Due to a perl bug you can't localize {@CWD}.  See [/BUGS and
-CAVEATS] for a work around.
+B<NOTE> Due to a perl bug you can't localize C<<< @CWD >>>.  See L</BUGS and> for a work around.
 
-= EXAMPLES
+=head1 EXAMPLES
 
-(We omit the {use File::chdir} from these examples for terseness)
+(We omit the C<<< use File::chdir >>> from these examples for terseness)
 
-Here's {$CWD} instead of {chdir()}:
+Here's C<<< $CWD >>> instead of C<<< chdir() >>>:
 
-    $CWD = 'foo';           # chdir('foo')
+     $CWD = 'foo';           # chdir('foo')
 
 and now instead of Cwd.
 
-    print $CWD;             # use Cwd;  print Cwd::abs_path
+     print $CWD;             # use Cwd;  print Cwd::abs_path
 
-you can even do zsh style {cd foo bar}
+you can even do zsh style C<<< cd foo bar >>>
 
-    $CWD = '/usr/local/foo';
-    $CWD =~ s/usr/var/;
+     $CWD = '/usr/local/foo';
+     $CWD =~ s/usr/var/;
 
 if you want to localize that, make sure you get the parens right
 
-    {
-        (local $CWD) =~ s/usr/var/;
-        ...
-    }
+     {
+         (local $CWD) =~ s/usr/var/;
+         ...
+     }
 
 It's most useful for writing polite subroutines which don't leave the
 program in some strange directory:
 
-    sub foo {
-        local $CWD = 'some/other/dir';
-        ...do your work...
-    }
+     sub foo {
+         local $CWD = 'some/other/dir';
+         ...do your work...
+     }
 
 which is much simpler than the equivalent:
 
-    sub foo {
-        use Cwd;
-        my $orig_dir = Cwd::abs_path;
-        chdir('some/other/dir');
+     sub foo {
+         use Cwd;
+         my $orig_dir = Cwd::abs_path;
+         chdir('some/other/dir');
+ 
+         ...do your work...
+ 
+         chdir($orig_dir);
+     }
 
-        ...do your work...
-
-        chdir($orig_dir);
-    }
-
-{@CWD} comes in handy when you want to start moving up and down the
+C<<< @CWD >>> comes in handy when you want to start moving up and down the
 directory hierarchy in a cross-platform manner without having to use
 File::Spec.
 
-    pop @CWD;                   # chdir(File::Spec->updir);
-    push @CWD, 'some', 'dir'    # chdir(File::Spec->catdir(qw(some dir)));
+     pop @CWD;                   # chdir(File::Spec->updir);
+     push @CWD, 'some', 'dir'    # chdir(File::Spec->catdir(qw(some dir)));
 
 You can easily change your parent directory:
 
-    # chdir from /some/dir/bar/moo to /some/dir/foo/moo
-    $CWD[-2] = 'foo';
+     # chdir from /some/dir/bar/moo to /some/dir/foo/moo
+     $CWD[-2] = 'foo';
 
-= CAVEATS
+=head1 CAVEATS
 
-=== Assigning to {@CWD} calls {chdir()} for each element
+=head3 Assigning to C<<< @CWD >>> calls C<<< chdir() >>> for each element
 
-    @CWD = qw/a b c d/;
+     @CWD = qw/a b c d/;
 
-Internally, Perl clears {@CWD} and assigns each element in turn.  Thus, this
+Internally, Perl clears C<<< @CWD >>> and assigns each element in turn.  Thus, this
 code above will do this:
 
-    chdir 'a';
-    chdir 'a/b';
-    chdir 'a/b/c';
-    chdir 'a/b/c/d';
+     chdir 'a';
+     chdir 'a/b';
+     chdir 'a/b/c';
+     chdir 'a/b/c/d';
 
-Generally, avoid assigning to {@CWD} and just use push and pop instead.
+Generally, avoid assigning to C<<< @CWD >>> and just use push and pop instead.
 
-=== {local @CWD} does not work.
+=head3 C<<< local @CWD >>> does not work.
 
-{local @CWD>} will not localize {@CWD}.  This is a bug in Perl, you
+C<<< local @CWD> >>> will not localize C<<< @CWD >>>.  This is a bug in Perl, you
 can't localize tied arrays.  As a work around localizing $CWD will
 effectively localize @CWD.
 
-    {
-        local $CWD;
-        pop @CWD;
-        ...
-    }
+     {
+         local $CWD;
+         pop @CWD;
+         ...
+     }
 
-=== Volumes not handled
+=head3 Volumes not handled
 
 There is currently no way to change the current volume via File::chdir.
 
-= NOTES
+=head1 NOTES
 
-{$CWD} returns the current directory using native path separators, i.e. \ 
-on Win32.  This ensures that {$CWD} will compare correctly with directories
+C<<< $CWD >>> returns the current directory using native path separators, i.e. \ 
+on Win32.  This ensures that C<<< $CWD >>> will compare correctly with directories
 created using File::Spec.  For example:
 
-    my $working_dir = File::Spec->catdir( $CWD, "foo" );
-    $CWD = $working_dir;
-    doing_stuff_might_chdir();
-    is( $CWD, $working_dir, "back to original working_dir?" );
+     my $working_dir = File::Spec->catdir( $CWD, "foo" );
+     $CWD = $working_dir;
+     doing_stuff_might_chdir();
+     is( $CWD, $working_dir, "back to original working_dir?" );
 
-Deleting the last item of {@CWD} will act like a pop.  Deleting from the
+Deleting the last item of C<<< @CWD >>> will act like a pop.  Deleting from the
 middle will throw an exception.
 
-    delete @CWD[-1]; # OK
-    delete @CWD[-2]; # Dies
+     delete @CWD[-1]; # OK
+     delete @CWD[-2]; # Dies
 
 What should %CWD do?  Something with volumes?
 
-    # chdir to C:\Program Files\Sierra\Half Life ?
-    $CWD{C} = '\\Program Files\\Sierra\\Half Life';
+     # chdir to C:\Program Files\Sierra\Half Life ?
+     $CWD{C} = '\\Program Files\\Sierra\\Half Life';
 
-= DIAGNOSTICS
+=head1 DIAGNOSTICS
 
-If an error is encountered when changing {$CWD} or {@CWD}, one of
+If an error is encountered when changing C<<< $CWD >>> or C<<< @CWD >>>, one of
 the following exceptions will be thrown:
 
-* ~Can't delete except at the end of @CWD~
-* ~Failed to change directory to '$dir'~
+=over
 
-= BUGS
+=item *
 
-Please report any bugs or feature using the CPAN Request Tracker.  
-Bugs can be submitted through the web interface at 
-[http://rt.cpan.org/Dist/Display.html?Queue=File-chdir]
+I<Can't delete except at the end of @CWD>
 
-When submitting a bug or request, please include a test-file or a patch to an
-existing test-file that illustrates the bug or desired feature.
+=item *
 
-= AUTHOR
+I<Failed to change directory to '$dir'>
 
-* Michael G Schwern <schwern@pobox.com> (original author)
-* David A Golden <dagolden@cpan.org> (current maintainer)
+=back
 
-= LICENSE
+=head1 HISTORY
 
-Copyright 2001-2003 by Michael G Schwern <schwern@pobox.com>.
-Portions copyright 2006-2007 by David A Golden <dagolden@cpan.org>.
-
-This program is free software; you can redistribute it and/or 
-modify it under the same terms as Perl itself.
-
-See [http://dev.perl.org/licenses/]
-
-= HISTORY
-
-Michael wanted {local chdir} to work.  p5p didn't.  But it wasn't over!
+Michael wanted C<<< local chdir >>> to work.  p5p didn't.  But it wasn't over!
 Was it over when the Germans bombed Pearl Harbor?  Hell, no!
 
-Abigail and/or Bryan Warnock suggested the {$CWD} thing (Michael forgets
+Abigail andE<sol>or Bryan Warnock suggested the C<<< $CWD >>> thing (Michael forgets
 which).  They were right.
 
-The {chdir()} override was eliminated in 0.04.
+The C<<< chdir() >>> override was eliminated in 0.04.
 
 David became co-maintainer with 0.06_01 to fix some chronic
 Win32 path bugs.
 
-As of 0.08, if changing {$CWD} or {@CWD} fails to change the directory, an
+As of 0.08, if changing C<<< $CWD >>> or C<<< @CWD >>> fails to change the directory, an
 error will be thrown.
 
-= SEE ALSO
+=head1 SEE ALSO
 
-[File::pushd], [File::Spec], [Cwd], [perlfunc/chdir], 
-"Animal House" [http://www.imdb.com/title/tt0077975/quotes]
+L<File::pushd>, L<File::Spec>, L<Cwd>, L<perlfunc/chdir>, 
+"Animal House" L<http://www.imdb.com/title/tt0077975/quotes>
 
-=end wikidoc
+=for :stopwords cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto metadata placeholders
+
+=head1 SUPPORT
+
+=head2 Bugs / Feature Requests
+
+Please report any bugs or feature requests by email to C<bug-file-chdir at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir>. You will be automatically notified of any
+progress on the request by the system.
+
+=head2 Source Code
+
+This is open source software.  The code repository is available for
+public review and contribution under the terms of the license.
+
+L<https://github.com/dagolden/file-chdir>
+
+  git clone https://github.com/dagolden/file-chdir.git
+
+=head1 AUTHORS
+
+=over 4
+
+=item *
+
+David A Golden <dagolden@cpan.org>
+
+=item *
+
+Michael G Schwern <schwern@pobox.com> (original author)
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2011 by Michael G Schwern and David A Golden.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
+
+
+__END__
+
 

@@ -1,10 +1,17 @@
 ---
 abstract: 'a more sensible way to change directories'
 author:
-  - 'David A. Golden <dagolden@cpan.org>'
+  - 'David A Golden <dagolden@cpan.org>'
+  - 'Michael G Schwern <schwern@pobox.com> (original author)'
+build_requires:
+  File::Find: 0
+  File::Temp: 0
+  Test::More: 0
+  warnings: 0
 configure_requires:
-  Module::Build: 0.36
-generated_by: 'Module::Build version 0.3603'
+  ExtUtils::MakeMaker: 6.30
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.300002, CPAN::Meta::Converter version 2.112580'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -12,19 +19,32 @@ meta-spec:
 name: File-chdir
 no_index:
   directory:
+    - t
+    - xt
     - examples
-    - inc
+    - corpus
+  package:
+    - DB
 provides:
   File::chdir:
     file: lib/File/chdir.pm
-    version: 0.1004
+    version: 0.1005
   File::chdir::ARRAY:
     file: lib/File/chdir.pm
+    version: 0.1005
   File::chdir::SCALAR:
     file: lib/File/chdir.pm
+    version: 0.1005
 requires:
+  Carp: 0
   Cwd: 3.16
-  File::Spec: 3.27
+  Exporter: 0
+  File::Spec::Functions: 3.27
+  perl: 5.006
+  strict: 0
+  vars: 0
 resources:
-  license: http://dev.perl.org/licenses/
-version: 0.1004
+  bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir
+  homepage: https://github.com/dagolden/file-chdir
+  repository: https://github.com/dagolden/file-chdir.git
+version: 0.1005
