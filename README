@@ -2,7 +2,7 @@ NAME
     File::chdir - a more sensible way to change directories
 
 VERSION
-    version 0.1005
+    version 0.1006
 
 SYNOPSIS
        use File::chdir;

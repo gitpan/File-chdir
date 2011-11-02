@@ -28,13 +28,13 @@ no_index:
 provides:
   File::chdir:
     file: lib/File/chdir.pm
-    version: 0.1005
+    version: 0.1006
   File::chdir::ARRAY:
     file: lib/File/chdir.pm
-    version: 0.1005
+    version: 0.1006
   File::chdir::SCALAR:
     file: lib/File/chdir.pm
-    version: 0.1005
+    version: 0.1006
 requires:
   Carp: 0
   Cwd: 3.16
@@ -47,4 +47,4 @@ resources:
   bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir
   homepage: https://github.com/dagolden/file-chdir
   repository: https://github.com/dagolden/file-chdir.git
-version: 0.1005
+version: 0.1006

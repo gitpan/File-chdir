@@ -16,6 +16,7 @@ t/chdir.t
 t/delete-array.t
 t/lib/dummy.txt
 t/nested.t
+t/newline.t
 t/var.t
 xt/author/critic.t
 xt/release/distmeta.t
