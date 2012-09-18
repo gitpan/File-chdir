@@ -3,7 +3,7 @@ use 5.004;
 use strict;
 use vars qw($VERSION @ISA @EXPORT $CWD @CWD);
 # ABSTRACT: a more sensible way to change directories
-our $VERSION = '0.1006'; # VERSION
+our $VERSION = '0.1007'; # VERSION
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -16,10 +16,10 @@ use File::Spec::Functions 3.27 qw/canonpath splitpath catpath splitdir catdir/;
 tie $CWD, 'File::chdir::SCALAR' or die "Can't tie \$CWD";
 tie @CWD, 'File::chdir::ARRAY'  or die "Can't tie \@CWD";
 
-sub _abs_path { 
+sub _abs_path {
     # Otherwise we'll never work under taint mode.
     my($cwd) = Cwd::abs_path =~ /(.*)/s;
-    # Run through File::Spec, since everything else uses it 
+    # Run through File::Spec, since everything else uses it
     return canonpath($cwd);
 }
 
@@ -38,7 +38,7 @@ sub _catpath {
     return catpath($vol, catdir(q{}, @dirs), q{});
 }
 
-sub _chdir { 
+sub _chdir {
     my($new_dir) = @_;
 
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
@@ -52,14 +52,14 @@ sub _chdir {
     package File::chdir::SCALAR;
     use Carp;
 
-    BEGIN { 
+    BEGIN {
         *_abs_path = \&File::chdir::_abs_path;
         *_chdir = \&File::chdir::_chdir;
         *_split_cwd = \&File::chdir::_split_cwd;
         *_catpath = \&File::chdir::_catpath;
     }
 
-    sub TIESCALAR { 
+    sub TIESCALAR {
         bless [], $_[0];
     }
 
@@ -80,8 +80,8 @@ sub _chdir {
     package File::chdir::ARRAY;
     use Carp;
 
-    BEGIN { 
-        *_abs_path = \&File::chdir::_abs_path; 
+    BEGIN {
+        *_abs_path = \&File::chdir::_abs_path;
         *_chdir = \&File::chdir::_chdir;
         *_split_cwd = \&File::chdir::_split_cwd;
         *_catpath = \&File::chdir::_catpath;
@@ -91,7 +91,7 @@ sub _chdir {
         bless {}, $_[0];
     }
 
-    sub FETCH { 
+    sub FETCH {
         my($self, $idx) = @_;
         my ($vol, @cwd) = _split_cwd;
         return $cwd[$idx];
@@ -113,9 +113,9 @@ sub _chdir {
         return $cwd[$idx];
     }
 
-    sub FETCHSIZE { 
+    sub FETCHSIZE {
         my ($vol, @cwd) = _split_cwd;
-        return scalar @cwd; 
+        return scalar @cwd;
     }
     sub STORESIZE {}
 
@@ -166,7 +166,7 @@ sub _chdir {
         my $offset = shift || 0;
         my $len = shift || $self->FETCHSIZE - $offset;
         my @new_dirs = @_;
-        
+
         my ($vol, @cwd) = _split_cwd;
         my @orig_dirs = splice @cwd, $offset, $len, @new_dirs;
         my $dir = _catpath($vol, @cwd);
@@ -175,7 +175,7 @@ sub _chdir {
     }
 
     sub EXTEND { }
-    sub EXISTS { 
+    sub EXISTS {
         my($self, $idx) = @_;
         return $self->FETCHSIZE >= $idx ? 1 : 0;
     }
@@ -191,6 +191,7 @@ sub _chdir {
 
 1;
 
+__END__
 
 =pod
 
@@ -200,7 +201,7 @@ File::chdir - a more sensible way to change directories
 
 =head1 VERSION
 
-version 0.1006
+version 0.1007
 
 =head1 SYNOPSIS
 
@@ -242,7 +243,7 @@ It can be localized, and it does the right thing.
      }
      # still /foo out here!
 
-C<<< $CWD >>> always returns the absolute path in the native form for the 
+C<<< $CWD >>> always returns the absolute path in the native form for the
 operating system.
 
 C<<< $CWD >>> and normal C<<< chdir() >>> work together just fine.
@@ -265,7 +266,7 @@ probably the most useful.
 
 C<<< @CWD >>> and C<<< $CWD >>> both work fine together.
 
-B<NOTE> Due to a perl bug you can't localize C<<< @CWD >>>.  See L</BUGS and> for a work around.
+B<NOTE> Due to a perl bug you can't localize C<<< @CWD >>>.  See L</CAVEATS> for a work around.
 
 =head1 EXAMPLES
 
@@ -325,6 +326,18 @@ You can easily change your parent directory:
 
 =head1 CAVEATS
 
+=head3 C<<< local @CWD >>> does not work.
+
+C<<< local @CWD> >>> will not localize C<<< @CWD >>>.  This is a bug in Perl, you
+can't localize tied arrays.  As a work around localizing $CWD will
+effectively localize @CWD.
+
+     {
+         local $CWD;
+         pop @CWD;
+         ...
+     }
+
 =head3 Assigning to C<<< @CWD >>> calls C<<< chdir() >>> for each element
 
      @CWD = qw/a b c d/;
@@ -339,25 +352,13 @@ code above will do this:
 
 Generally, avoid assigning to C<<< @CWD >>> and just use push and pop instead.
 
-=head3 C<<< local @CWD >>> does not work.
-
-C<<< local @CWD> >>> will not localize C<<< @CWD >>>.  This is a bug in Perl, you
-can't localize tied arrays.  As a work around localizing $CWD will
-effectively localize @CWD.
-
-     {
-         local $CWD;
-         pop @CWD;
-         ...
-     }
-
 =head3 Volumes not handled
 
 There is currently no way to change the current volume via File::chdir.
 
 =head1 NOTES
 
-C<<< $CWD >>> returns the current directory using native path separators, i.e. \ 
+C<<< $CWD >>> returns the current directory using native path separators, i.e. \
 on Win32.  This ensures that C<<< $CWD >>> will compare correctly with directories
 created using File::Spec.  For example:
 
@@ -412,18 +413,18 @@ error will be thrown.
 
 =head1 SEE ALSO
 
-L<File::pushd>, L<File::Spec>, L<Cwd>, L<perlfunc/chdir>, 
+L<File::pushd>, L<File::Spec>, L<Cwd>, L<perlfunc/chdir>,
 "Animal House" L<http://www.imdb.com/title/tt0077975/quotes>
 
-=for :stopwords cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto metadata placeholders
+=for :stopwords cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto metadata placeholders metacpan
 
 =head1 SUPPORT
 
 =head2 Bugs / Feature Requests
 
-Please report any bugs or feature requests by email to C<bug-file-chdir at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir>. You will be automatically notified of any
-progress on the request by the system.
+Please report any bugs or feature requests through the issue tracker
+at L<https://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir>.
+You will be notified automatically of any progress on your issue.
 
 =head2 Source Code
 
@@ -432,7 +433,7 @@ public review and contribution under the terms of the license.
 
 L<https://github.com/dagolden/file-chdir>
 
-  git clone https://github.com/dagolden/file-chdir.git
+  git clone git://github.com/dagolden/file-chdir.git
 
 =head1 AUTHORS
 
@@ -450,14 +451,9 @@ Michael G Schwern <schwern@pobox.com> (original author)
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Michael G Schwern and David A Golden.
+This software is copyright (c) 2012 by Michael G Schwern and David A Golden.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
-__END__
-
-

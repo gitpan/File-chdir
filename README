@@ -2,7 +2,7 @@ NAME
     File::chdir - a more sensible way to change directories
 
 VERSION
-    version 0.1006
+    version 0.1007
 
 SYNOPSIS
        use File::chdir;
@@ -63,8 +63,8 @@ $CWD
 
     @CWD and $CWD both work fine together.
 
-    NOTE Due to a perl bug you can't localize @CWD. See "BUGS and" for a
-    work around.
+    NOTE Due to a perl bug you can't localize @CWD. See "CAVEATS" for a work
+    around.
 
 EXAMPLES
     (We omit the "use File::chdir" from these examples for terseness)
@@ -122,6 +122,17 @@ EXAMPLES
          $CWD[-2] = 'foo';
 
 CAVEATS
+   "local @CWD" does not work.
+    "local @CWD>" will not localize @CWD. This is a bug in Perl, you can't
+    localize tied arrays. As a work around localizing $CWD will effectively
+    localize @CWD.
+
+         {
+             local $CWD;
+             pop @CWD;
+             ...
+         }
+
    Assigning to @CWD calls "chdir()" for each element
          @CWD = qw/a b c d/;
 
@@ -134,17 +145,6 @@ CAVEATS
          chdir 'a/b/c/d';
 
     Generally, avoid assigning to @CWD and just use push and pop instead.
-
-   "local @CWD" does not work.
-    "local @CWD>" will not localize @CWD. This is a bug in Perl, you can't
-    localize tied arrays. As a work around localizing $CWD will effectively
-    localize @CWD.
-
-         {
-             local $CWD;
-             pop @CWD;
-             ...
-         }
 
    Volumes not handled
     There is currently no way to change the current volume via File::chdir.
@@ -199,10 +199,9 @@ SEE ALSO
 
 SUPPORT
   Bugs / Feature Requests
-    Please report any bugs or feature requests by email to "bug-file-chdir
-    at rt.cpan.org", or through the web interface at
-    <http://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir>. You will
-    be automatically notified of any progress on the request by the system.
+    Please report any bugs or feature requests through the issue tracker at
+    <https://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir>. You will
+    be notified automatically of any progress on your issue.
 
   Source Code
     This is open source software. The code repository is available for
@@ -210,7 +209,7 @@ SUPPORT
 
     <https://github.com/dagolden/file-chdir>
 
-      git clone https://github.com/dagolden/file-chdir.git
+      git clone git://github.com/dagolden/file-chdir.git
 
 AUTHORS
     *   David A Golden <dagolden@cpan.org>
@@ -218,7 +217,7 @@ AUTHORS
     *   Michael G Schwern <schwern@pobox.com> (original author)
 
 COPYRIGHT AND LICENSE
-    This software is copyright (c) 2011 by Michael G Schwern and David A
+    This software is copyright (c) 2012 by Michael G Schwern and David A
     Golden.
 
     This is free software; you can redistribute it and/or modify it under

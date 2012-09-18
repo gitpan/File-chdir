@@ -11,7 +11,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.300002, CPAN::Meta::Converter version 2.112580'
+generated_by: 'Dist::Zilla version 4.300021, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -28,13 +28,13 @@ no_index:
 provides:
   File::chdir:
     file: lib/File/chdir.pm
-    version: 0.1006
+    version: 0.1007
   File::chdir::ARRAY:
     file: lib/File/chdir.pm
-    version: 0.1006
+    version: 0.1007
   File::chdir::SCALAR:
     file: lib/File/chdir.pm
-    version: 0.1006
+    version: 0.1007
 requires:
   Carp: 0
   Cwd: 3.16
@@ -44,7 +44,7 @@ requires:
   strict: 0
   vars: 0
 resources:
-  bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir
-  homepage: https://github.com/dagolden/file-chdir
-  repository: https://github.com/dagolden/file-chdir.git
-version: 0.1006
+  bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=File-chdir
+  homepage: https://metacpan.org/release/File-chdir
+  repository: git://github.com/dagolden/file-chdir.git
+version: 0.1007
