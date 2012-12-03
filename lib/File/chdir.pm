@@ -3,7 +3,7 @@ use 5.004;
 use strict;
 use vars qw($VERSION @ISA @EXPORT $CWD @CWD);
 # ABSTRACT: a more sensible way to change directories
-our $VERSION = '0.1007'; # VERSION
+our $VERSION = '0.1008'; # VERSION
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -18,7 +18,7 @@ tie @CWD, 'File::chdir::ARRAY'  or die "Can't tie \@CWD";
 
 sub _abs_path {
     # Otherwise we'll never work under taint mode.
-    my($cwd) = Cwd::abs_path =~ /(.*)/s;
+    my($cwd) = Cwd::getcwd =~ /(.*)/s;
     # Run through File::Spec, since everything else uses it
     return canonpath($cwd);
 }
@@ -39,7 +39,8 @@ sub _catpath {
 }
 
 sub _chdir {
-    my($new_dir) = @_;
+    # Untaint target directory
+    my ($new_dir) = $_[0] =~ /(.*)/s;
 
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
     if ( ! CORE::chdir($new_dir) ) {
@@ -201,7 +202,7 @@ File::chdir - a more sensible way to change directories
 
 =head1 VERSION
 
-version 0.1007
+version 0.1008
 
 =head1 SYNOPSIS
 
@@ -304,7 +305,7 @@ which is much simpler than the equivalent:
 
      sub foo {
          use Cwd;
-         my $orig_dir = Cwd::abs_path;
+         my $orig_dir = Cwd::getcwd;
          chdir('some/other/dir');
  
          ...do your work...
@@ -328,7 +329,7 @@ You can easily change your parent directory:
 
 =head3 C<<< local @CWD >>> does not work.
 
-C<<< local @CWD> >>> will not localize C<<< @CWD >>>.  This is a bug in Perl, you
+C<<< local @CWD >>> will not localize C<<< @CWD >>>.  This is a bug in Perl, you
 can't localize tied arrays.  As a work around localizing $CWD will
 effectively localize @CWD.
 

@@ -2,7 +2,7 @@ NAME
     File::chdir - a more sensible way to change directories
 
 VERSION
-    version 0.1007
+    version 0.1008
 
 SYNOPSIS
        use File::chdir;
@@ -101,7 +101,7 @@ EXAMPLES
 
          sub foo {
              use Cwd;
-             my $orig_dir = Cwd::abs_path;
+             my $orig_dir = Cwd::getcwd;
              chdir('some/other/dir');
  
              ...do your work...
@@ -123,7 +123,7 @@ EXAMPLES
 
 CAVEATS
    "local @CWD" does not work.
-    "local @CWD>" will not localize @CWD. This is a bug in Perl, you can't
+    "local @CWD" will not localize @CWD. This is a bug in Perl, you can't
     localize tied arrays. As a work around localizing $CWD will effectively
     localize @CWD.
 

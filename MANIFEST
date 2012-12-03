@@ -1,3 +1,4 @@
+CONTRIBUTING
 Changes
 LICENSE
 MANIFEST
@@ -5,7 +6,6 @@ META.json
 META.yml
 Makefile.PL
 README
-README.PATCHING
 dist.ini
 examples/chdir-example.pl
 lib/File/chdir.pm
